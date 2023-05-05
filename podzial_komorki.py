@@ -91,19 +91,43 @@ def I_ref(I_out,Q):
     return I_in_ref(I_out,Q)[1]
 
 Q = 10 #ilosc podwarstw
-I_out = []
+I_out_tab = []
 
 for i in range (0,8):
-    I_out_temp=np.arange(10**(i),10**(i+1),10**(i-2))
-    I_out = np.concatenate((I_out,I_out_temp))
+    I_out_temp=np.arange(10**(i),10**(i+1),10**(i-1))
+    I_out_tab = np.concatenate((I_out_tab, I_out_temp))
 
 
-I_in_tab = [I_in(i,Q) for i in I_out]
+I_in_tab = [I_in(i,Q) for i in I_out_tab]
+I_ref_tab = [I_ref(i,Q) for i in I_out_tab]
 
-plt.plot(I_out,I_in_tab)
+plt.plot(I_out_tab, I_in_tab)
 
-plt.ylabel(r'$P_{out}[W/m]$')
-plt.xlabel(r'$P_{in}$')
+plt.ylabel(r'$P_{out}[W/m^2]$')
+plt.xlabel(r'$P_{in}[W/m^2]$')
 plt.yscale('log')
 plt.xscale('log')
+plt.show()
+
+
+I_ref_to_I_inc = []
+for r,i in zip(I_ref_tab,I_in_tab):
+    I_ref_to_I_inc.append(r/i)
+
+plt.plot(I_ref_to_I_inc,I_in_tab)
+plt.yscale('log')
+plt.xscale('log')
+plt.xlabel(r'$P_{in}[W/m^2]$')
+plt.ylabel("R")
+plt.show()
+
+I_out_to_I_inc = []
+for o,i in zip(I_out_tab,I_in_tab):
+    I_out_to_I_inc.append(o/i)
+
+plt.plot(I_out_to_I_inc,I_in_tab)
+plt.yscale('log')
+plt.xscale('log')
+plt.xlabel(r'$P_{in}[W/m^2]$')
+plt.ylabel("T")
 plt.show()
