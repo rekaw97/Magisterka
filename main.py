@@ -1,6 +1,7 @@
 
 import numpy as np
 from matplotlib import pyplot as plt
+import matplotlib
 from mpl_toolkits import mplot3d
 from decimal import Decimal
 
@@ -86,6 +87,9 @@ def M(delta_lambda,ilosc_komorek):
     for i in range(0,ilosc_komorek):
         lista.extend([P2(delta_lambda),J21,P1(delta_lambda),J12])
 
+    lista.append(P2(delta_lambda))
+    lista.append(J21)
+    lista.append(P1(delta_lambda))
     lista.append(J10)
 
     M = [[1, 0],
@@ -140,7 +144,7 @@ def wart_wlas_2(delta_lambda,ilosc_komorek):
                                                             - 2 * rL(delta_lambda,ilosc_komorek) * rR(delta_lambda,ilosc_komorek)))
 
 
-delta_lambda_tab = np.arange(0,20,0.0001)
+delta_lambda_tab = np.arange(0,20,0.01)
 RL_tab = []
 TL_tab = []
 TR_tab = []
@@ -176,11 +180,13 @@ for i in range(0,len(delta_lambda_tab)):
         WW1_tab[i], WW2_tab[i] = WW2_tab[i], WW1_tab[i]
 
 
-plt.plot(delta_lambda_tab,TR_tab)
+plt.plot(delta_lambda_tab[1:],TR_tab[1:],label=r'$T_{R}$')
+plt.plot(delta_lambda_tab[1:],TL_tab[1:],label=r'$T_{L}$')
 plt.yscale('log')
 plt.ylabel("T")
 plt.xlabel("Λ/λ")
-plt.title("Transmitancja z prawej strony")
+plt.title("Transmitancja")
+plt.legend()
 plt.show()
 
 plt.plot(delta_lambda_tab[1:],RR_tab[1:],label=r'$R_{R}$')
@@ -203,43 +209,85 @@ plt.legend()
 plt.show()
 
 
-def adjust_ticks(max_value_new,steps):
-    Tick_Labels=[]
-    Ticks=[]
-    for i in range (0,steps):
-        Tick_Labels.append(i*max_value_new/(steps))
-        Ticks.append(i/steps)
-
-    return Ticks,Tick_Labels
+#%%
+delta_lambda_tab = np.arange(0,2,0.0001)
 
 
-delta_lambda_tab = np.arange(0,2,0.005)
+licz_kom=150
+maksimum =0
+maksima_tab=[]
+Z_tab=[]
+for i,dl in enumerate(delta_lambda_tab):
+    Z=[]
+    max_temp=0
+    for j in range(1,licz_kom+1):
+        val = TL(dl, j)
+        Z.append(val)
 
+
+    max_temp=max(Z)
+    if max_temp > maksimum:
+        maksimum = max_temp
+        max_del_lam = dl
+    maksima_tab.append(max_temp)
+    Z_tab.append(Z)
+
+#%%
+def adjust_ticks(max_value_new,max_value_old,steps):
+
+    Ticks_List=[]
+    Tick_Label=[]
+
+    for i in range (0,steps+1):
+        Ticks_List.append(i * max_value_old / steps)
+        Tick_Label.append(i * max_value_new / steps)
+
+
+    return Ticks_List,Tick_Label[::-1]
+
+
+kolory = ['green','yellow','orange','red']
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
 
-kolory = ['teal','blue','cyan','blueviolet']
+alphas = maksima_tab/maksimum
+alphas_log=np.log10(alphas)
+alphas_norm = alphas_log-min(alphas_log)
+alphas_line = alphas_norm/max(alphas_norm)
+#print(alphas_line)
 
-licz_kom=100
+for i in range(0,len(Z_tab)):
 
-for i,dl in enumerate(delta_lambda_tab):
-    Z=[]
-    for j in range(1,licz_kom):
-        Z.append(RL(dl,j))
-    X=np.arange(1,licz_kom,1)
-    if np.mean(Z)>0.7:
-        ax.plot(X, Z, zs=len(delta_lambda_tab) - i, zdir='y', color=kolory[i % len(kolory)])
+
+    z=Z_tab[i]
+
+    X=np.arange(1,licz_kom+1,1)
+    kol_num = int(np.floor(alphas_line[i])*(len(kolory)-1))
+    #print(kol_num)
+    if np.max(z)>4:
+    #kol_num=int(np.ceil(maksima_tab[i]/maksimum*len(kolory)))-1
+
+
+        kolor = kolory[kol_num]
+        ax.plot(X, z, len(Z_tab)-i, zdir='y', color=kolor,alpha = 1 )
+
+
     else:
-        ax.plot(X, Z , zs=len(delta_lambda_tab)-i, zdir='y',color = 'w')
+        kolor = kolory[kol_num]
+        ax.plot(X, z, len(Z_tab)-i, zdir='y', color = 'blue',alpha=0.01)
 
-#ticks,labels=adjust_ticks(2,5)
-ticks=[0.0,80.0,160.0,240.0,320.0,400.0]
-labels=[0.0,0.4,0.8,1.2,1.6,2.0]
-
+delta_lambda_end=2
+ticks,labels=adjust_ticks(delta_lambda_end,len(delta_lambda_tab),5)
 ax.set_yticks(ticks)
 ax.set_yticklabels(labels)
-
+plt.ylabel("Λ/λ")
+plt.xlabel("N")
+plt.title(r"$T_L$"+' dla  '+r"$n_1={}$".format(n1))
+print(max_del_lam)
+print(maksimum)
 
 plt.show()
+
+
 
 
